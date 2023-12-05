@@ -1,6 +1,7 @@
 
 public class InstructionRow {
 	String label;
+	String tag;
 	String instructionString;
 	int latency; 
 	/*index 0 is L.D
@@ -22,6 +23,7 @@ public class InstructionRow {
 		this.instructionString = instructionString;
 		this.executionStart = 0;
 		this.executionEnd = 0;
+		this.tag = "";
 		String[] words = instructionString.split(" ");
 		switch(words[0]) {
 		case "L.D": this.latency = latencies[0]; break;

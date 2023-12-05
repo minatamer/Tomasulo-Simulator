@@ -9,8 +9,11 @@ public class BufferRow {
 	
 	
 	public BufferRow(String type, int index) {
-		if(type.equals("LOAD")) 
+		if(type.equals("LOAD")) {
 			tag = "L"+index;
+			q = "";
+			v = 0;
+		}
 		else {
 			tag = "S"+index;
 			q = "";

@@ -18,8 +18,8 @@ public class ReservationStationRow {
 		Op = "";
 		vj = 0;
 		vk = 0;
-		qj = "";
-		qk = "";	
+		qj = "0";
+		qk = "0";	
 	}
 	
     public String toString() {

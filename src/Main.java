@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -29,11 +30,14 @@ public class Main {
 	  index 8 is ADDI
 	  index 9 is BNEZ
 	 */
-	
+
 	
 	public Main(int [] latencies , ArrayList<InstructionRow> instructions) {
-		this.cycle = 0;
-		this.cache = new ArrayList<Float>();
+		this.cycle = 1;
+		this.cache = new ArrayList<Float>(100);
+		for (int i = 0; i < 100; i++) {
+				cache.add(0f);
+			}
 		this.instructions = new ArrayList<InstructionRow>();
 		this.reservationStationsAdd = new ReservationStations("ADD",3);
 		this.reservationStationsMul = new ReservationStations("MUL",2);
@@ -46,8 +50,19 @@ public class Main {
 		this.instructions = instructions;
 	}
 	
+    public static void printHashtable(Hashtable<String, Float> hashtable) {
+        Enumeration<String> keys = hashtable.keys();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement();
+            float value = hashtable.get(key);
+            System.out.println("Key: " + key + ", Value: " + value);
+        }
+    }
+	
 	public void display() {
+		System.out.println("---------------------------------------------------------------");
 		System.out.println("Current Cycle: " + cycle);
+		System.out.println("PC: " + PC);
 	    // Display Reservation Stations for ADD
 	    System.out.println("Reservation Stations for ADD:");
 	    reservationStationsAdd.display();
@@ -79,6 +94,11 @@ public class Main {
 	    for (InstructionRow instruction : executionQueue) {
 	        System.out.println(instruction);
 	    }
+	    
+	    // Display Bus
+	    System.out.println("\nBus:");
+	    printHashtable(bus);
+		System.out.println("---------------------------------------------------------------");
 	}
 	
 	public void issue(Main main) {
@@ -97,10 +117,12 @@ public class Main {
 				for(RegisterFileRow r : main.registerFile.registerFileRows) {
 					if(r.name.equals(words[1])) { //handling tag
 						r.qi = main.buffersLoad.bufferRows[i].tag;
+						currentInstruction.tag = main.buffersLoad.bufferRows[i].tag;
 					}
 				}
+				PC++;
+				break;
 			}
-			break;
 		} break;
 		case "S.D":
 			for(int i=0;i<main.buffersStore.length;i++) {
@@ -108,15 +130,17 @@ public class Main {
 				main.buffersStore.bufferRows[i].busy=true;
 				main.buffersStore.bufferRows[i].address= Integer.parseInt(words[2]);
 				for(RegisterFileRow r : main.registerFile.registerFileRows) {
-					if(r.name.equals(words[1])) { //handling tag
+					if(r.name.equals(words[1])) {
 						if(r.qi.equals("0")) { //if equal to zero yeb2a value gahza
 							main.buffersStore.bufferRows[i].v = r.value;
 						}
 						else {
 							main.buffersStore.bufferRows[i].q = r.qi;
 						}
+						currentInstruction.tag = main.buffersStore.bufferRows[i].tag;
 					}
 				}
+				PC++;
 				break;
 			}	
 
@@ -145,8 +169,10 @@ public class Main {
 					}
 					if(r.name.equals(words[1])) { //handling tag
 						r.qi = main.reservationStationsMul.reservationStations[i].tag;
+						currentInstruction.tag = main.reservationStationsMul.reservationStations[i].tag;
 					}
 				}
+				PC++;
 				break;
 			}
 			
@@ -177,8 +203,11 @@ public class Main {
 					}
 					if(r.name.equals(words[1])) { //handling tag
 						r.qi = main.reservationStationsMul.reservationStations[i].tag;
+						currentInstruction.tag = main.reservationStationsMul.reservationStations[i].tag;
+						
 					}
 				}
+				PC++;
 				break;
 			}
 				
@@ -208,8 +237,10 @@ public class Main {
 						}
 						if(r.name.equals(words[1])) { //handling tag
 							r.qi = main.reservationStationsAdd.reservationStations[i].tag;
+							currentInstruction.tag = main.reservationStationsAdd.reservationStations[i].tag;
 						}
 					}
+					PC++;
 					break;
 				}
 					
@@ -239,8 +270,10 @@ public class Main {
 						}
 						if(r.name.equals(words[1])) { //handling tag
 							r.qi = main.reservationStationsAdd.reservationStations[i].tag;
+							currentInstruction.tag = main.reservationStationsAdd.reservationStations[i].tag;
 						}
 					}
+					PC++;
 					break;
 				}
 					
@@ -270,8 +303,10 @@ public class Main {
 					}
 					if(r.name.equals(words[1])) { //handling tag
 						r.qi = main.reservationStationsAdd.reservationStations[i].tag;
+						currentInstruction.tag = main.reservationStationsAdd.reservationStations[i].tag;
 					}
 				}
+				PC++;
 				break;
 			}
 				
@@ -294,8 +329,10 @@ public class Main {
 					}
 					if(r.name.equals(words[1])) { //handling tag
 						r.qi = main.reservationStationsAdd.reservationStations[i].tag;
+						currentInstruction.tag = main.reservationStationsAdd.reservationStations[i].tag;
 					}
 				}
+				PC++;
 				break;
 			}
 				
@@ -318,8 +355,10 @@ public class Main {
 					}
 					if(r.name.equals(words[1])) { //handling tag
 						r.qi = main.reservationStationsAdd.reservationStations[i].tag;
+						currentInstruction.tag = main.reservationStationsAdd.reservationStations[i].tag;
 					}
 				}
+				PC++;
 				break;
 			}
 				
@@ -341,6 +380,7 @@ public class Main {
 							}	
 						}
 					}
+					PC++;
 					break;
 				}
 					
@@ -352,8 +392,7 @@ public class Main {
 		
 		
 		}
-		PC++;
-		cycle++;
+		
 	}
 	public void executeHelper (Main main) {
 		for (int i=0 ; i<main.PC ; i++) {
@@ -362,20 +401,23 @@ public class Main {
 			InstructionRow currentInstruction = main.instructions.get(i); 
 			String[] words = currentInstruction.instructionString.split(" ");
 			if (currentInstruction.executionStart == 0) {
+				System.out.println("this instructions entered executeHelper: " + currentInstruction);
 				for(RegisterFileRow r : main.registerFile.registerFileRows) {
-					if ((words[0].equals("S.D") || words[0].equals("L.D") || words[0].equals("BNEZ")) &&  r.name.equals(words[1])) {
-						if(r.qi.equals("0")) {
+					if (words[0].equals("S.D") || words[0].equals("L.D") || words[0].equals("BNEZ") || words[0].equals("ADDI")  || words[0].equals("SUBI")) {
+						if(r.name.equals(words[1]) && r.qi.equals("0")) {
 							firstRegister=true;
 						}
+						if (words[0].equals("L.D") && (r.name.equals(words[1]) && r.qi.equals(currentInstruction.tag)))
+								firstRegister=true;
 					}
 					else {
 						if(r.name.equals(words[2])) {
-							if(r.qi.equals("0")) {
+							if(r.qi.equals("0") || currentInstruction.tag.equals(r.qi) ) {
 								firstRegister=true;
 							}
 						}
 						if(r.name.equals(words[3])) {
-							if(r.qi.equals("0")) {
+							if(r.qi.equals("0") || currentInstruction.tag.equals(r.qi) ) {
 								secondRegister=true;
 							}
 						}
@@ -387,7 +429,7 @@ public class Main {
 				}
 				if (firstRegister && secondRegister) {
 					currentInstruction.executionStart = main.cycle;
-					currentInstruction.executionEnd = currentInstruction.executionStart + currentInstruction.latency;
+					currentInstruction.executionEnd = currentInstruction.executionStart + currentInstruction.latency - 1;
 					main.executionQueue.add(currentInstruction);
 				}
 			}
@@ -408,7 +450,7 @@ public class Main {
 		}
 		return result;
 	}
-	
+	 
 	public void execute(Main main) {
 		for (int i = 0 ; i < main.executionQueue.size() ; i++) {
 			InstructionRow instructionToBeExecuted = main.executionQueue.get(i);
@@ -419,107 +461,67 @@ public class Main {
 				float value = 0;
 				float op1 = 0;
 				float op2 = 0;
-				switch(words[0]) {
-					case "DADD": 
-						for(RegisterFileRow r : main.registerFile.registerFileRows) {
-							if(words[2].equals(r.name))
-								op1 = r.value;
-							if(words[3].equals(r.name))
-								op2 = r.value;
-						}
-						value = op1 + op2;
-						break;
-					case "ADD.D": 
-						for(RegisterFileRow r : main.registerFile.registerFileRows) {
-							if(words[2].equals(r.name))
-								op1 = r.value;
-							if(words[3].equals(r.name))
-								op2 = r.value;
-						}
-						value = op1 + op2;
-						break;
-					case "SUB.D": 
-						for(RegisterFileRow r : main.registerFile.registerFileRows) {
-							if(words[2].equals(r.name))
-								op1 = r.value;
-							if(words[3].equals(r.name))
-								op2 = r.value;
-						}
-						value = op1 - op2;
-						break;
-					case "MUL.D": 
-						for(RegisterFileRow r : main.registerFile.registerFileRows) {
-							if(words[2].equals(r.name))
-								op1 = r.value;
-							if(words[3].equals(r.name))
-								op2 = r.value;
-						}
-						value = op1 * op2;
-						break;
-					case "DIV.D": 
-						for(RegisterFileRow r : main.registerFile.registerFileRows) {
-							if(words[2].equals(r.name))
-								op1 = r.value;
-							if(words[3].equals(r.name))
-								op2 = r.value;
-						}
-						value = op1 / op2;
-						break;
-					case "ADDI": 
-						op2 = Float.parseFloat(words[3]);
-						for(RegisterFileRow r : main.registerFile.registerFileRows) {
-							if(words[2].equals(r.name))
-								op1 = r.value;
-						}
-						value = op1 + op2;
-						break;
-					case "SUBI": 
-						op2 = Float.parseFloat(words[3]);
-						for(RegisterFileRow r : main.registerFile.registerFileRows) {
-							if(words[2].equals(r.name))
-								op1 = r.value;
-						}
-						value = op1 - op2;
-						break;
-					case "BNEZ": 
-						for(RegisterFileRow r : main.registerFile.registerFileRows) {
-							if(words[1].equals(r.name))
-								op1 = r.value;
-						}
-						op2 = 0;
-						value = op1 + op2;
-						if (value == 0) {
-							for (int j=0 ; j<main.instructions.size() ; j++) {
-								if(main.instructions.get(i).label == instructionToBeExecuted.label) {
-									PC = j;
-									break;
-								}
-									
-							}
-						}
-						break;
-					case "L.D": 
-						int loadAddress = Integer.parseInt(words[2]);
-						value = cache.get(loadAddress);
-						break;
-					case "S.D": //just execute here
+				String tag = instructionToBeExecuted.tag;
+				System.out.println("ANA 3ANDY TAG: " + instructionToBeExecuted.tag);
+				String tagLetter = tag.substring(0, 1);
+			    switch(tagLetter) {
+			        case "A":
+			        	for(ReservationStationRow r : main.reservationStationsAdd.reservationStations) {
+			        		if(r.tag.equals(tag)) {
+			        			if (r.Op.equals("ADD")) {
+			        				op1 = r.vj;
+			        				op2 = r.vk;
+			        				value = op1+op2;
+			        			}
+			        			else {
+			        				op1 = r.vj;
+			        				op2 = r.vk;
+			        				value = op1-op2;
+			        			}
+			        		}
+			        	}
+			        	break;
+			        case "M":
+			        	for(ReservationStationRow r : main.reservationStationsMul.reservationStations) {
+			        		if(r.tag.equals(tag)) {
+			        			if (r.Op.equals("MUL")) {
+			        				op1 = r.vj;
+			        				op2 = r.vk;
+			        				value = op1*op2;
+			        			}
+			        			else {
+			        				op1 = r.vj;
+			        				op2 = r.vk;
+			        				value = op1/op2;
+			        			}
+			        		}
+			        	}
+			        	break;
+			        case "S":
 						int address = Integer.parseInt(words[2]);
-						for(RegisterFileRow r : main.registerFile.registerFileRows) {
-							if(words[1].equals(r.name))
-								value = r.value;
-							break;
-						}
+			        	for(BufferRow r : main.buffersStore.bufferRows) {
+			        		if (r.tag.equals(tag)) {
+			        			value=r.v;
+			        		}
+			        	}
 						cache.set(address, value);
-						break;
+			        	break;
+			        case "L":
+						int loadAddress = Integer.parseInt(words[2]);
+						System.out.println("I AM THE ADDRESS: " + loadAddress + "AND THIS IS WHAT IS IN MY ADDRESS: " + cache.get(loadAddress));
+						value = cache.get(loadAddress);
+			        	break;
+			        }
 						
-				}
 				if (!words[0].equals("BNEZ") && !words[0].equals("S.D"))
-					bus.put(findTag (main, instructionToBeExecuted), value);
+					bus.put(instructionToBeExecuted.tag, value);
+				System.out.println("i removed index " + i);
 				executionQueue.remove(i);
+				i--;
 				
 			}
 		}
-		cycle++;
+		//cycle++;
 
 	}
 	
@@ -542,10 +544,8 @@ public class Main {
         		r.value = value;
         	}
         }
-        String tagLetter = tag.substring(0, 1);
-        switch(tagLetter) {
-        case "A":
-        	for(ReservationStationRow r : main.reservationStationsAdd.reservationStations) {
+        	// first check if any other reservationstationRow needs this tag
+        for(ReservationStationRow r : main.reservationStationsAdd.reservationStations) {
         		if(r.qj.equals(tag)) {
         			r.qj = "0";
         			r.vj = value;
@@ -555,6 +555,7 @@ public class Main {
         			r.vk = value;
         		}
         	}
+        	//then empty the corresponding reservation station to that row
         	for(ReservationStationRow r : main.reservationStationsAdd.reservationStations) {
         		if (r.tag.equals(tag)) {
         			r.busy = false;
@@ -565,8 +566,7 @@ public class Main {
         			r.qk = "";
         		}
         	}
-        	break;
-        case "M":
+      
         	for(ReservationStationRow r : main.reservationStationsMul.reservationStations) {
         		if(r.qj.equals(tag)) {
         			r.qj = "0";
@@ -587,19 +587,9 @@ public class Main {
         			r.qk = "";
         		}
         	}
-        	break;
-        case "S":
-        	for(BufferRow r : main.buffersLoad.bufferRows) {
-        		if (r.tag.equals(tag)) {
-        			r.busy = false;
-        			r.address =-1;	
-        			r.q = "";
-        			r.v = 0;
-        		}
-        	}
-        	break;
-        case "L":
-        	for(BufferRow r : main.buffersLoad.bufferRows) {
+        	
+        	
+        	for(BufferRow r : main.buffersStore.bufferRows) {
         		if(r.q.equals(tag)) {
         			r.q = "0";
         			r.v = value;
@@ -613,13 +603,19 @@ public class Main {
         			r.v = 0;
         		}
         	}
-        	break;
+        
         }
         
         
-		cycle++;
-        
-	}
+    public static boolean registerChecker(Main main) {
+        for(RegisterFileRow r : main.registerFile.registerFileRows) {
+        	if (!(r.qi.equals("0"))) {
+        		return false;
+        	}
+        }
+        return true;
+    }
+	
 
 	public static void main(String[] args) {
 		/*index 0 is L.D
@@ -633,40 +629,63 @@ public class Main {
 		  index 8 is ADDI
 		  index 9 is BNEZ
 		 */
-		int[] latencies = {1,1,1,40,4,1,2,1,1,1};
+		int[] latencies = {1,1,6,40,4,1,2,1,1,1};
         ArrayList<String> instructions = new ArrayList<>();
-        instructions.add("MUL.D F3 F1 F2");
-        /*instructions.add("ADD F5 F3 F4");
-        instructions.add("ADD F7 F2 F6");
-        instructions.add("ADD F10 F8 F9");
-        instructions.add("MUL F11 F7 F10");
-        instructions.add("ADD F5 F5 F11");*/
+        /*instructions.add("MUL.D F3 F1 F2");
+        instructions.add("ADD.D F5 F3 F4");
+        instructions.add("ADD.D F7 F2 F6");
+        instructions.add("ADD.D F10 F8 F9");
+        instructions.add("MUL.D F11 F7 F10");
+        instructions.add("ADD.D F5 F5 F11");*/
+        
+        instructions.add("LOOP L.D F0 24");
+        instructions.add("MUL.D F4 F0 F2");
+        instructions.add("S.D F4 24");
+        instructions.add("SUBI F1 F1 8");
+        instructions.add("BNEZ F1 LOOP");
+        
         
         ArrayList<InstructionRow> instructionRows = new ArrayList<InstructionRow>();
-        for (int i=0 ; i<instructions.size() ; i++) {
+        InstructionRow instructionRow2 = new InstructionRow(latencies, "LOOP", "L.D F0 24");
+        instructionRows.add(instructionRow2);
+        for (int i=1 ; i<instructions.size() ; i++) {
         	InstructionRow instructionRow = new InstructionRow(latencies, "", instructions.get(i));
         	instructionRows.add(instructionRow);
         }
-        
+        //System.out.println("" + instructionRows.size() + instructionRows.get(0));
         
         Main main = new Main(latencies, instructionRows);
+    
         main.registerFile.registerFileRows[1].value = 3;
         main.registerFile.registerFileRows[2].value = 2;
-        main.issue(main);
-        main.display();
-        //main.issue(main);
-        main.execute(main);
-        main.display();
-        main.writeResult(main);
-        main.display();
-        /*while(main.PC < main.instructions.size()) {
-        	main.issue(main);
-        	main.execute(main);
+        main.registerFile.registerFileRows[4].value = 6;
+        main.registerFile.registerFileRows[8].value = 4;
+        main.registerFile.registerFileRows[9].value = 5;
+        
+        main.cache.add(8, 10.0f );
+        main.cache.add(16, 20.0f );
+        main.cache.add(24, 30.0f );
+        
+        while(true) {
         	main.writeResult(main);
-        	main.display();
-            main.PC++;
+        	main.executeHelper(main);
+        	main.issue(main);
+            main.display();
             main.cycle++;
-        }*/
+            /*if (main.cycle > 2 ) {
+            	if(main.executionQueue.isEmpty() && main.bus.isEmpty() && registerChecker(main)) {
+            		break;
+            	}
+            }*/
+            if (main.cycle == 25) {
+            	break;
+            }
+        }
+        
+
+        
+            
+    
         
 
 		
