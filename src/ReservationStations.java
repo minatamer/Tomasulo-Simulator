@@ -25,5 +25,14 @@ public class ReservationStations {
             System.out.println(row);
         }
     }
+    
+    public boolean isNotBusy() {
+        for (ReservationStationRow row : reservationStations) {
+            if (row.busy) {
+                return false; // If any row is busy, the array is busy
+            }
+        }
+        return true; // All rows are not busy so its not busy
+    }
 	
 }

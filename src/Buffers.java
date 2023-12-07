@@ -18,6 +18,15 @@ public class Buffers {
             System.out.println(row);
         }
     }
+    
+    public boolean isNotBusy() {
+        for (BufferRow row : bufferRows) {
+            if (row.busy) {
+                return false; // If any row is busy, the array is busy
+            }
+        }
+        return true; // All rows are not busy so its not busy
+    }
 	
 
 }
