@@ -1,0 +1,19 @@
+        instructions.add("MUL.D F3 F1 F2");  
+        instructions.add("ADD.D F5 F3 F4"); 
+        instructions.add("ADD.D F7 F2 F6"); 
+        instructions.add("ADD.D F10 F8 F9"); 
+        instructions.add("MUL.D F11 F7 F10"); 
+        instructions.add("ADD.D F5 F5 F11"); 
+
+--------------------------------------------------------------
+
+	instructions.add("L.D F0 8");
+        instructions.add("MUL.D F2 F0 F1");
+        instructions.add("L.D F3 7");
+        instructions.add("ADD.D F4 F3 F2");
+        instructions.add("S.D F4 7"); 
+
+---------------------------------------------------------------------
+instructions.add("DADD R3 R1 R2");
+        instructions.add("ADDI R4 R3 10");
+        instructions.add("SUBI R5 R4 3");
