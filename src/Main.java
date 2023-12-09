@@ -427,9 +427,9 @@ public class Main {
 		}
 		
 	}
-	//Execute Helper helps our main execute function to know which instructions are ready
-	//to execute by checking if the operands of the instructions are ready or not by 
-	//checking if the registers they are working with have their Q="0" or not.
+//Execute Helper helps our main execute function to know which instructions are ready
+//to execute by checking if the operands of the instructions are ready or not by 
+//checking if the registers they are working with have their Q="0" or not
 	public void executeHelper (Main main) { 
 		for (int i=0 ; i<main.PC ; i++) {
 			boolean firstRegister = false;
@@ -437,59 +437,45 @@ public class Main {
 			InstructionRow currentInstruction = main.instructions.get(i); 
 			String[] words = currentInstruction.instructionString.split(" ");
 			if (currentInstruction.executionStart == 0) {
-				if(words[1].substring(0,1).equals("F")){ //if its a float instruction
-					for(FloatRegisterRow r : main.floatRegisterFile.floatRegisterRows) {
-						if (words[0].equals("S.D") || words[0].equals("L.D") || words[0].equals("BNEZ")) {
-							if(r.name.equals(words[1]) && r.qi.equals("0")) {
-								firstRegister=true;
-							}
-							if (words[0].equals("L.D") && (r.name.equals(words[1]) && r.qi.equals(currentInstruction.tag)))
-								firstRegister=true;
-						}
-						else { //else handle the MUL.D DIV.D ADD.D SUB.D
-							if(r.name.equals(words[2])) {
-								if(r.qi.equals("0") || currentInstruction.tag.equals(r.qi) ) {
-									firstRegister=true;
-								}
-							}
-							if(r.name.equals(words[3])) {
-								if(r.qi.equals("0") || currentInstruction.tag.equals(r.qi) ) {
-									secondRegister=true;
-								}
-							}
-						}
-
-					}
-				}
-				else { //ELSE its an integer instruction
-					for(IntegerRegisterRow r : main.integerRegisterFile.integerRegisterRows) {
-						if (words[0].equals("DADD") || words[0].equals("ADDI")  || words[0].equals("SUBI")) {
-							if(r.name.equals(words[2]) && r.qi.equals("0")) 
-								firstRegister=true;
-							if(words[0].equals("DADD")) {
-								if(r.name.equals(words[2])) {
-									if(r.qi.equals("0") || currentInstruction.tag.equals(r.qi) ) {
-										firstRegister=true;
-									}
-								}
-								if(r.name.equals(words[3])) {
-									if(r.qi.equals("0") || currentInstruction.tag.equals(r.qi) ) {
-										secondRegister=true;
-									}
-								}
-							}
-						}
-						else { //SPECIAL CASE FOR BNEZ SINCE FIRST REGISTER IS IN WORDS[1] AND NOT WORDS[2]
-							if(r.name.equals(words[1]) && r.qi.equals("0")) 
-								firstRegister=true;
-						}
-					}
-				
-				}
-
-				if (words[0].equals("ADDI") || words[0].equals("SUBI") || words[0].equals("L.D") || words[0].equals("S.D") || words[0].equals("BNEZ")) {
-					secondRegister = true;
-				}
+				String tagLetter = currentInstruction.tag.substring(0, 1);
+			    switch(tagLetter) {
+			        case "A":
+			        	for(ReservationStationRow r : main.reservationStationsAdd.reservationStations) {
+			        		if(r.tag.equals(currentInstruction.tag)) {
+			        			if (r.qj.equals("0") && r.qk.equals("0")) {
+			        				firstRegister=true;
+			        				secondRegister=true;
+			        			}
+			        		}
+			        	}
+			        	break;
+			        case "M":
+			        	for(ReservationStationRow r : main.reservationStationsMul.reservationStations) {
+			        		if(r.tag.equals(currentInstruction.tag)) {
+				        		if(r.tag.equals(currentInstruction.tag)) {
+				        			if (r.qj.equals("0") && r.qk.equals("0")) {
+				        				firstRegister=true;
+				        				secondRegister=true;
+				        			}
+				        		}
+			        		}
+			        	}
+			        	break;
+			        case "S":
+			        	for(BufferRow r : main.buffersStore.bufferRows) {
+			        		if (r.tag.equals(currentInstruction.tag)) {
+			        			if(r.q.equals("")) {
+			        				firstRegister=true;
+			        				secondRegister=true;
+			        			}
+			        			
+			        		}
+			        	}
+			        	break;
+			        case "L":firstRegister=true;
+    				secondRegister=true;
+			        	break;
+			        }
 				if (firstRegister && secondRegister) {
 					currentInstruction.executionStart = main.cycle;
 					currentInstruction.executionEnd = currentInstruction.executionStart + currentInstruction.latency - 1;
@@ -599,7 +585,7 @@ public class Main {
 						branchTag= instructionToBeExecuted.tag;
 						for (int j =0; j<main.instructions.size() ; j++) {
 							main.instructions.get(j).executionStart=0;
-							main.instructions.get(j).executionEnd=0;
+							//main.instructions.get(j).executionEnd=0;
 						}
 					}
 					else {
@@ -611,7 +597,7 @@ public class Main {
 				
 			}
 		}
-		//cycle++;
+		
 
 	}
 	
@@ -626,8 +612,8 @@ public class Main {
         			r.Op = "";
         			r.vj = 0;
         			r.vk = 0;
-        			r.qj = "";
-        			r.qk = "";
+        			r.qj = "0";
+        			r.qk = "0";
         		}
         	}
         	branchTag="";
@@ -640,8 +626,8 @@ public class Main {
 	        			r.Op = "";
 	        			r.vj = 0;
 	        			r.vk = 0;
-	        			r.qj = "";
-	        			r.qk = "";
+	        			r.qj = "0";
+	        			r.qk = "0";
 	        		}
 	        	}
 				stall=false;
@@ -691,8 +677,8 @@ public class Main {
         			r.Op = "";
         			r.vj = 0;
         			r.vk = 0;
-        			r.qj = "";
-        			r.qk = "";
+        			r.qj = "0";
+        			r.qk = "0";
         		}
         	}
       
@@ -712,15 +698,15 @@ public class Main {
         			r.Op = "";
         			r.vj = 0;
         			r.vk = 0;
-        			r.qj = "";
-        			r.qk = "";
+        			r.qj = "0";
+        			r.qk = "0";
         		}
         	}
         	
         	
         	for(BufferRow r : main.buffersStore.bufferRows) {
         		if(r.q.equals(tag)) {
-        			r.q = "0";
+        			r.q = "";
         			r.v = value;
         		}
         	}
@@ -910,9 +896,10 @@ public class Main {
         //instructionRows.add(instructionRow2);
         
         instructions.add("MUL.D F1 F1 F2");  //LOOP
-        instructions.add("SUB.D F3 F3 F4"); 
-        instructions.add("BNEZ F3 LOOP");   
+        instructions.add("SUBI R1 R1 1"); 
+        instructions.add("BNEZ R1 LOOP");   
         instructions.add("ADD.D F5 F5 F5"); 
+        instructions.add("MUL.D F5 F5 F2"); 
        
         for (int i=0 ; i<instructions.size() ; i++) {
         	InstructionRow instructionRow = new InstructionRow(latencies, "", instructions.get(i));
@@ -926,14 +913,10 @@ public class Main {
         
         main.floatRegisterFile.floatRegisterRows[1].value = 3;
         main.floatRegisterFile.floatRegisterRows[2].value = 2;
-        main.floatRegisterFile.floatRegisterRows[3].value = 3;
-        main.floatRegisterFile.floatRegisterRows[4].value = 1;
         main.floatRegisterFile.floatRegisterRows[5].value = 5;
-       
-
         
-        //main.integerRegisterFile.integerRegisterRows[1].value= 2;
-        //main.integerRegisterFile.integerRegisterRows[2].value= 3;
+        main.integerRegisterFile.integerRegisterRows[1].value= 3;
+        main.integerRegisterFile.integerRegisterRows[2].value= 1;
         
    
         //main.cache.add(7, 20.0f );
