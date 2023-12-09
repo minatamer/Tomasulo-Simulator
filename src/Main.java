@@ -31,17 +31,17 @@ public class Main {
 	
 
 	
-	public Main(int[] latencies , ArrayList<InstructionRow> instructions ) {
+	public Main(int[] latencies , ArrayList<InstructionRow> instructions , int addReservationStationSize , int mulReservationStationSize , int loadBufferSize , int storeBufferSize) {
 		this.cycle = 1;
 		this.cache = new ArrayList<Float>(1024);
 		for (int i = 0; i < 1024; i++) {
 				cache.add(0f);
 			}
 		this.instructions = new ArrayList<InstructionRow>();
-		this.reservationStationsAdd = new ReservationStations("ADD",3);
-		this.reservationStationsMul = new ReservationStations("MUL",2);
-		this.buffersLoad = new Buffers("LOAD",5);
-		this.buffersStore = new Buffers("STORE",5);
+		this.reservationStationsAdd = new ReservationStations("ADD",addReservationStationSize);
+		this.reservationStationsMul = new ReservationStations("MUL",mulReservationStationSize);
+		this.buffersLoad = new Buffers("LOAD",loadBufferSize);
+		this.buffersStore = new Buffers("STORE",storeBufferSize);
 		this.floatRegisterFile = new RegisterFile(32 , "float"); 
 		this.integerRegisterFile = new RegisterFile(32 , "integer"); 
 		this.PC = 0;
@@ -110,7 +110,6 @@ public class Main {
 	    // Display Bus
 	    System.out.println("\nBus:");
 	    printHashtable(bus);
-		System.out.println("---------------------------------------------------------------");
 	}
 	
 	public void issue(Main main) {
@@ -517,7 +516,7 @@ public class Main {
 				float op1 = 0;
 				float op2 = 0;
 				String tag = instructionToBeExecuted.tag;
-				System.out.println("ANA 3ANDY TAG: " + instructionToBeExecuted.tag);
+				//System.out.println("ANA 3ANDY TAG: " + instructionToBeExecuted.tag);
 				String tagLetter = tag.substring(0, 1);
 			    switch(tagLetter) {
 			        case "A":
@@ -571,7 +570,7 @@ public class Main {
 			        	break;
 			        case "L":
 						int loadAddress = Integer.parseInt(words[2]);
-						System.out.println("I AM THE ADDRESS: " + loadAddress + "AND THIS IS WHAT IS IN MY ADDRESS: " + cache.get(loadAddress));
+						//System.out.println("I AM THE ADDRESS: " + loadAddress + "AND THIS IS WHAT IS IN MY ADDRESS: " + cache.get(loadAddress));
 						value = cache.get(loadAddress);
 			        	break;
 			        }
@@ -789,6 +788,26 @@ public class Main {
     	Scanner scanner = new Scanner(System.in);
     	
    	 	//Get inputs of latencies
+		/*index 0 is L.D
+		  index 1 is S.D
+		  index 2 is MUL.D
+		  index 3 is DIV.D
+		  index 4 is ADD.D
+		  index 5 is DADD
+		  index 6 is SUB.D
+		  index 7 is SUBI
+		  index 8 is ADDI
+		  index 9 is BNEZ
+		 */
+    	System.out.println("Welcome to the (hopefully working) Tomasulo Algorithm Simulator!");
+    	System.out.println("\nThe Tomasulo algorithm is a computer architecture algorithm used" +"\n" +"for dynamic scheduling of instructions in out-of-order execution processors. \n");
+    	System.out.println("All we need from you to start this epic (and again hopefully working) Tomasulo \nAlgorithm Simulator"
+    			+ " we will need you to input the following: ");
+    	System.out.println("\n1. Latencies for each instruction");
+    	System.out.println("2. The assembly instructions you want to execute");
+    	System.out.println("3. The size of the reservation stations and buffers");
+    	System.out.println("4. Preload anything in the cache or register file, however this needs \nto be done before execution in the Simulator method.");
+    	System.out.println("Thats it! Enjoy. \n");
         int[] latencies = new int[10];
     	 for (int i = 0; i < latencies.length; i++) {
              if (i == 8 || i == 9) {
@@ -813,7 +832,10 @@ public class Main {
                 break;
             }
 
-            instructions.add(instructionInput);
+            if (instructionInput.equals(""))
+            	System.out.println("You Entered empty instruction.");
+            else
+            	instructions.add(instructionInput);
         }
 
         // Initialize instructionRows
@@ -851,13 +873,30 @@ public class Main {
          // Close the scanner
          scanner.close();
          
-         //Main main= new Main(latencies, instructionRows,addReservationStationSize , mulReservationStationSize , loadBufferSize , storeBufferSize);
-         /*while(true) {
+         Main main= new Main(latencies, instructionRows,addReservationStationSize , mulReservationStationSize , loadBufferSize , storeBufferSize);
+         
+         /////////////// ADD WHATEVER YOU WANT IN THE CACHE OR REGISTER FILE HERE ///////////////
+         // use this for integer -> main.integerRegisterFile.integerRegisterRows[#].value= #;
+         // use this for float -> main.floatRegisterFile.floatRegisterRows[#].value = #;
+         // use this for cache -> main.cache.set(#address#, #float value eg: 5.0f# );
+         main.floatRegisterFile.floatRegisterRows[1].value = 3;
+         main.floatRegisterFile.floatRegisterRows[2].value = 2;
+         main.floatRegisterFile.floatRegisterRows[5].value = 5;
+
+         main.integerRegisterFile.integerRegisterRows[1].value = 3;
+         
+         main.cache.set(8, 5.0f);
+         main.cache.set(7, 3.0f);
+         
+         while(true) {
+        	//the 3-step pipeline, write->execute->issue
+        	//done in reserve since in cycle 1 and 2 it will not 
+        	
            	main.writeResult(main);
          	main.executeHelper(main);
          	main.issue(main);
-             main.display();
-             main.cycle++;
+            main.display();
+            main.cycle++;
 
              if (main.cycle > 2 ) {
              	if(main.executionQueue.isEmpty() && main.bus.isEmpty() 
@@ -871,90 +910,12 @@ public class Main {
              		break;
              	}
              }
-         }*/
+         }
     }
 	
 
 	public static void main(String[] args) {
-		/*index 0 is L.D
-		  index 1 is S.D
-		  index 2 is MUL.D
-		  index 3 is DIV.D
-		  index 4 is ADD.D
-		  index 5 is DADD
-		  index 6 is SUB.D
-		  index 7 is SUBI
-		  index 8 is ADDI
-		  index 9 is BNEZ
-		 */
-		
-		int[] latencies = {1,1,4,4,4,1,2,1,1,1};
-        ArrayList<String> instructions = new ArrayList<>();
-
-        ArrayList<InstructionRow> instructionRows = new ArrayList<InstructionRow>();
-        //InstructionRow instructionRow2 = new InstructionRow(latencies, "LOOP", "SUB.D F0 F0 F2");
-        //instructionRows.add(instructionRow2);
-        
-        instructions.add("MUL.D F1 F1 F2");  //LOOP
-        instructions.add("SUBI R1 R1 1"); 
-        instructions.add("BNEZ R1 LOOP");   
-        instructions.add("ADD.D F5 F5 F5"); 
-        instructions.add("MUL.D F5 F5 F2"); 
-       
-        for (int i=0 ; i<instructions.size() ; i++) {
-        	InstructionRow instructionRow = new InstructionRow(latencies, "", instructions.get(i));
-        	instructionRows.add(instructionRow);
-        }
-    
-        
-        Main main = new Main(latencies , instructionRows);
-        //Simulate();
-   
-        
-        main.floatRegisterFile.floatRegisterRows[1].value = 3;
-        main.floatRegisterFile.floatRegisterRows[2].value = 2;
-        main.floatRegisterFile.floatRegisterRows[5].value = 5;
-        
-        main.integerRegisterFile.integerRegisterRows[1].value= 3;
-        main.integerRegisterFile.integerRegisterRows[2].value= 1;
-        
-   
-        //main.cache.add(7, 20.0f );
-        //main.cache.add(8, 30.0f );
-        
-        
-        while(true) {
-          	main.writeResult(main);
-        	main.executeHelper(main);
-        	main.issue(main);
-            main.display();
-            main.cycle++;
-
-            if (main.cycle > 2 ) {
-            	if(main.executionQueue.isEmpty() && main.bus.isEmpty() 
-            		&& floatRegisterChecker(main) 
-            		&& integerRegisterChecker(main)
-            		&& main.reservationStationsAdd.isNotBusy() 
-            		&& main.reservationStationsMul.isNotBusy() 
-            		&& main.buffersLoad.isNotBusy() 
-            		&& main.buffersStore.isNotBusy()) {
-            		
-            		break;
-            	}
-            }
-            /*if (main.cycle == 25) {
-            	break;
-            }*/
-        }
-        
-
-        
-            
-    
-        
-
-		
-		
+        simulate();		
 
 	}
 
